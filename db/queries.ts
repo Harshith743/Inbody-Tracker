@@ -18,7 +18,6 @@ export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
   if (_db) return _db;
   _db = await SQLite.openDatabaseAsync('inbody.db');
   await _db.execAsync(CREATE_TABLES_SQL);
-  await seedIfEmpty(_db);
   return _db;
 }
 
@@ -167,57 +166,6 @@ function reportToParams(r: InBodyReport): SQLite.SQLiteBindParams {
     r.segFatRightLeg, r.segFatRightLegPct,
     r.notes ?? null,
   ];
-}
-
-// ─── Seeding ──────────────────────────────────────────────────────────────────
-
-/**
- * Inserts one example report on first launch (when the table is empty).
- * Values are from a real InBody 770 scan on 2026-03-15.
- */
-async function seedIfEmpty(db: SQLite.SQLiteDatabase): Promise<void> {
-  const row = await db.getFirstAsync<{ n: number }>('SELECT COUNT(*) AS n FROM reports');
-  if ((row?.n ?? 0) > 0) return;
-
-  const seed: InBodyReport = {
-    id: randomUUID(),
-    date: '2026-03-15',
-    inbodyScore: 63,
-
-    weight: 109.5,
-    totalBodyWater: 42.8,
-    protein: 11.7,
-    mineral: 4.26,
-    bodyFatMass: 39.0,
-    fatFreeMass: 70.5,
-    skeletalMuscleMass: 40.2,
-
-    bmi: 33.4,
-    percentBodyFat: 35.6,
-
-    visceralFatLevel: 18,
-    waistHipRatio: 1.09,
-    basalMetabolicRate: 1892,
-    obesityDegree: 144,
-
-    // Segmental lean – plausible values for a 109.5 kg male
-    segLeanLeftArm: 3.15,  segLeanLeftArmPct: 95.7,
-    segLeanRightArm: 3.22, segLeanRightArmPct: 97.1,
-    segLeanTrunk: 29.1,    segLeanTrunkPct: 101.2,
-    segLeanLeftLeg: 9.82,  segLeanLeftLegPct: 96.4,
-    segLeanRightLeg: 9.91, segLeanRightLegPct: 97.0,
-
-    // Segmental fat
-    segFatLeftArm: 1.95,   segFatLeftArmPct: 32.1,
-    segFatRightArm: 1.98,  segFatRightArmPct: 32.7,
-    segFatTrunk: 22.4,     segFatTrunkPct: 38.2,
-    segFatLeftLeg: 6.31,   segFatLeftLegPct: 35.0,
-    segFatRightLeg: 6.36,  segFatRightLegPct: 35.4,
-
-    notes: 'Seed data – first InBody scan',
-  };
-
-  await db.runAsync(INSERT_SQL, reportToParams(seed));
 }
 
 // ─── Public Query API ─────────────────────────────────────────────────────────

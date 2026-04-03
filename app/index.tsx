@@ -350,13 +350,49 @@ export default function DashboardScreen() {
           </>
         ) : (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyEmoji}>📊</Text>
-            <Text style={[Typography.heading3, { marginBottom: Spacing.sm }]}>
-              No reports yet
+            {/* Logo / Icon */}
+            <View style={styles.welcomeIconWrap}>
+              <Text style={styles.welcomeIcon}>⚡</Text>
+            </View>
+
+            {/* Heading */}
+            <Text style={styles.welcomeTitle}>InBody Tracker</Text>
+            <Text style={styles.welcomeSubtitle}>
+              Your personal body composition journal
             </Text>
-            <Text style={Typography.bodySmall}>
-              Add your first InBody measurement to see your dashboard.
-            </Text>
+
+            {/* Feature pills */}
+            <View style={styles.featureList}>
+              {[
+                { icon: "📊", text: "Track InBody Score & trends over time" },
+                { icon: "📷", text: "Auto-fill scans with your camera" },
+                { icon: "⚖️",  text: "Compare multiple scans side-by-side" },
+                { icon: "🗓️", text: "Calendar view of your scan history" },
+              ].map((f) => (
+                <View key={f.text} style={styles.featurePill}>
+                  <Text style={styles.featurePillIcon}>{f.icon}</Text>
+                  <Text style={styles.featurePillText}>{f.text}</Text>
+                </View>
+              ))}
+            </View>
+
+            {/* Primary CTA */}
+            <TouchableOpacity
+              style={styles.ctaPrimary}
+              activeOpacity={0.85}
+              onPress={() => navigation.navigate("AddReport")}
+            >
+              <Text style={styles.ctaPrimaryText}>Add Your First Report</Text>
+            </TouchableOpacity>
+
+            {/* Secondary — scan shortcut */}
+            <TouchableOpacity
+              style={styles.ctaSecondary}
+              activeOpacity={0.75}
+              onPress={() => navigation.navigate("AddReport")}
+            >
+              <Text style={styles.ctaSecondaryText}>📷  Scan InBody Printout</Text>
+            </TouchableOpacity>
           </View>
         )}
 
@@ -473,10 +509,90 @@ const styles = StyleSheet.create({
   },
   emptyState: {
     alignItems: "center",
-    paddingVertical: Spacing["4xl"],
+    paddingVertical: Spacing.xl,
+    paddingHorizontal: Spacing.md,
   },
-  emptyEmoji: {
-    fontSize: 56,
-    marginBottom: Spacing.lg,
+  welcomeIconWrap: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: Colors.card,
+    borderWidth: 1.5,
+    borderColor: Colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: Spacing.xl,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  welcomeIcon: {
+    fontSize: 40,
+  },
+  welcomeTitle: {
+    ...Typography.statHero,
+    fontSize: 36,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.xs,
+    textAlign: "center",
+  },
+  welcomeSubtitle: {
+    ...Typography.body,
+    color: Colors.textSecondary,
+    textAlign: "center",
+    marginBottom: Spacing["2xl"],
+  },
+  featureList: {
+    width: "100%",
+    gap: Spacing.sm,
+    marginBottom: Spacing["2xl"],
+  },
+  featurePill: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.card,
+    borderRadius: Radius.md,
+    paddingVertical: Spacing.sm + 2,
+    paddingHorizontal: Spacing.md,
+    gap: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  featurePillIcon: {
+    fontSize: 18,
+  },
+  featurePillText: {
+    ...Typography.body,
+    color: Colors.textSecondary,
+    flex: 1,
+  },
+  ctaPrimary: {
+    width: "100%",
+    backgroundColor: Colors.primary,
+    paddingVertical: Spacing.md + 4,
+    borderRadius: Radius.md,
+    alignItems: "center",
+    marginBottom: Spacing.md,
+    ...Shadow.sm,
+  },
+  ctaPrimaryText: {
+    ...Typography.heading3,
+    color: Colors.textInverse,
+    fontSize: 17,
+  },
+  ctaSecondary: {
+    width: "100%",
+    backgroundColor: "transparent",
+    paddingVertical: Spacing.md,
+    borderRadius: Radius.md,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  ctaSecondaryText: {
+    ...Typography.body,
+    color: Colors.textSecondary,
   },
 });
