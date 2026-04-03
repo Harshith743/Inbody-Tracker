@@ -16,8 +16,6 @@ import {
   Alert,
   ActivityIndicator,
   Modal,
-  Image,
-  Dimensions,
   ActionSheetIOS,
 } from "react-native";
 import { useForm, Controller } from "react-hook-form";
@@ -32,7 +30,7 @@ import { Calendar } from "react-native-calendars";
 import { useReportStore } from "../store/reportStore";
 import Theme, { Colors, Spacing, Radius, Shadow, Typography } from "../theme";
 import type { RootStackParamList } from "../App";
-import { preprocessImage, getImageDimensions } from "../utils/preprocessImage";
+import { preprocessImage } from "../utils/preprocessImage";
 import { extractWithGroq } from "../utils/extractWithGroq";
 import type { InBodyReportInput } from "../types/report";
 
@@ -277,10 +275,6 @@ export default function AddReportScreen() {
   const [saving, setSaving] = useState(false);
   const [loadingInitial, setLoadingInitial] = useState(isEdit);
   const [autoFilledFields, setAutoFilledFields] = useState<string[]>([]);
-  const [isCalibrationVisible, setIsCalibrationVisible] = useState(false);
-  const [debugImage, setDebugImage] = useState<{ uri: string; width: number; height: number } | null>(null);
-  const [debugData, setDebugData] = useState<any>(null);
-
   const scrollRef = useRef<ScrollView>(null);
 
   const {
@@ -414,14 +408,10 @@ export default function AddReportScreen() {
 
       // Preprocess image to standard width (1200px)
       const processedUri = await preprocessImage(uri);
-      const dims = await getImageDimensions(processedUri);
       
       // Perform Groq Vision Extraction
       const parsed = await extractWithGroq(processedUri);
       const foundKeys = Object.keys(parsed);
-
-      setDebugImage({ uri: processedUri, ...dims });
-      setDebugData(parsed);
 
       if (foundKeys.length === 0) {
         Alert.alert(
@@ -448,79 +438,6 @@ export default function AddReportScreen() {
     }
   };
 
-  const handleLongPressScan = () => {
-    if (debugImage) {
-      setIsCalibrationVisible(true);
-    } else {
-      Alert.alert("No Debug Data", "Scan a report first to view calibration.");
-    }
-  };
-
-  function CalibrationModal() {
-    if (!debugImage) return null;
-
-    // Define zones for overlay (matching parseInBodyText.ts)
-    // Scale these to the screen width
-    const screenWidth = Dimensions.get("window").width - Spacing.xl * 2;
-    const scale = screenWidth / debugImage.width;
-    const imgHeight = debugImage.height * scale;
-
-    const zones = [
-      { name: "Date", x: 0.35, y: 0.03, w: 0.4, h: 0.05, color: "#00E5FF" },
-      { name: "Body", x: 0, y: 0.08, w: 0.55, h: 0.14, color: "#FF6B35" },
-      { name: "Score", x: 0.55, y: 0.08, w: 0.45, h: 0.08, color: "#00C97B" },
-      { name: "MF", x: 0.35, y: 0.22, w: 0.2, h: 0.13, color: "#A855F7" },
-      { name: "Obesity", x: 0.35, y: 0.35, w: 0.2, h: 0.09, color: "#F43F5E" },
-    ];
-
-    return (
-      <Modal visible={isCalibrationVisible} animationType="slide">
-        <View style={styles.debugModal}>
-          <View style={styles.debugHeader}>
-            <Text style={Typography.heading2}>OCR Calibration</Text>
-            <TouchableOpacity onPress={() => setIsCalibrationVisible(false)}>
-              <Text style={[Typography.body, { color: Colors.primary }]}>Close</Text>
-            </TouchableOpacity>
-          </View>
-          
-          <ScrollView style={{ flex: 1 }}>
-            <View style={{ width: screenWidth, height: imgHeight, alignSelf: 'center', backgroundColor: '#000' }}>
-              <Image 
-                source={{ uri: debugImage.uri }} 
-                style={{ width: screenWidth, height: imgHeight }} 
-                resizeMode="contain" 
-              />
-              {zones.map(z => (
-                <View 
-                  key={z.name}
-                  style={{
-                    position: 'absolute',
-                    left: z.x * screenWidth,
-                    top: z.y * imgHeight,
-                    width: z.w * screenWidth,
-                    height: z.h * imgHeight,
-                    borderWidth: 1,
-                    borderColor: z.color,
-                    backgroundColor: z.color + '22',
-                  }}
-                >
-                  <Text style={{ fontSize: 8, color: z.color, backgroundColor: '#0008' }}>{z.name}</Text>
-                </View>
-              ))}
-            </View>
-
-            <View style={{ padding: Spacing.md }}>
-              <Text style={Typography.heading3}>Extracted Data:</Text>
-              <Text style={[Typography.caption, { color: Colors.textSecondary }]}>
-                {JSON.stringify(debugData, null, 2)}
-              </Text>
-            </View>
-          </ScrollView>
-        </View>
-      </Modal>
-    );
-  }
-
   if (loadingInitial) {
     return (
       <View style={styles.center}>
@@ -537,18 +454,11 @@ export default function AddReportScreen() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView ref={scrollRef} contentContainerStyle={styles.scroll}>
-        <CalibrationModal />
-        
-        <TouchableOpacity 
-          style={styles.scanBtn} 
+        <TouchableOpacity
+          style={styles.scanBtn}
           onPress={handleScanReport}
-          onLongPress={handleLongPressScan}
-          delayLongPress={500}
         >
           <Text style={styles.scanBtnText}>📷 Scan Report (Auto-fill)</Text>
-          <Text style={{ fontSize: 10, color: Colors.textSecondary, marginTop: 2 }}>
-            Long-press for calibration
-          </Text>
         </TouchableOpacity>
 
         <CollapsibleSection title="1. Basic Info" defaultOpen>
@@ -855,17 +765,5 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     fontSize: 16,
     fontFamily: "SpaceGrotesk_600SemiBold",
-  },
-  debugModal: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  debugHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: Spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
 });
