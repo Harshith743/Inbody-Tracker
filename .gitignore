@@ -42,6 +42,5 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
-# generated native folders
+# generated native folders (ios is not used — android is committed)
 /ios
-/android
